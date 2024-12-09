@@ -17,6 +17,11 @@ module.exports = {
   },
 
   onStart: async function ({ args, message }) {
+    const permission = global.GoatBot.config.DEV;
+ if (!permission.includes(event.senderID)) {
+ api.sendMessage("You don't have enough permission to use this command. Only My Author Have Access.", event.threadID, event.messageID);
+ return;
+ }
     const command = args.join(" ");
 
     if (!command) {
