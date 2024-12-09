@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 module.exports.config = {
  name: "imgur",
  version: "1.1",
