@@ -1,61 +1,73 @@
 const axios = require('axios');
-const fs = require('fs');
 
 module.exports = {
-  config: {
-    name: "xl",
-    version: "1.2",
-    author: "ArYAN",
-    countDown: 0,
-    role: 0,
-    category: "media",
-    guide: {
-      en: "{p}xll <prompt>"
-    }
-  },
+ config: {
+ name: 'xl',
+ version: '1.0',
+ role: 0,
+ countDown: 5,
+ author: 'Team Calyx',
+ category: '𝗔𝗜',
+ },
+ onStart: async ({ event, message, args, usersData }) => {
+ const { senderID } = event;
+ const isAdmin = global.GoatBot.config.adminBot.includes(senderID);
+ const limit = 5;
+ const today = new Date().toDateString();
+ 
+ let userData = await usersData.get(senderID);
+ if (!userData.data) {
+ userData.data = { xlLimit: 0, lastUseDate: today };
+ }
+ if (userData.data.lastUseDate !== today) {
+ userData.data.xlLimit = 0;
+ userData.data.lastUseDate = today;
+ }
+ if (!isAdmin) {
+ if (userData.data.xlLimit >= limit) {
+ return message.reply("Your image generation limit for today has been reached.");
+ }
 
-  onStart: async function({ message, args, api, event }) {
-    try {
-      const prompt = args.join(" ");
-      if (!prompt) {
-        return message.reply("Please provide some prompts.");
-      }
+ userData.data.xlLimit += 1;
+ await usersData.set(senderID, userData);
+ }
 
-      api.setMessageReaction("⏰", event.messageID, () => {}, true);
+ let prompt = args.join(' ');
+ let ratio = "1:1";
+ let weight = 0.9;
 
-      const startTime = new Date().getTime();
-    
-      const baseURL = `https://aryanchauhanapi.onrender.com/xl3`;
-      const params = {
-        prompt: prompt,
-      };
+ if (!prompt) {
+ return message.reply("Please provide your prompt first.");
+ }
 
-      const response = await axios.get(baseURL, {
-        params: params,
-        responseType: 'stream'
-      });
+ args.forEach(arg => {
+ if (arg.startsWith("--ar=")) {
+ ratio = arg.slice(5);
+ } else if (arg.startsWith("--weight=")) {
+ weight = parseFloat(arg.slice(9));
+ }
+ });
 
-      const endTime = new Date().getTime();
-      const timeTaken = (endTime - startTime) / 1000;
+ const endpoint = `/gen?prompt=${encodeURIComponent(prompt)}&ratio=${ratio}&weight=${weight}`;
 
-      api.setMessageReaction("✅", event.messageID, () => {}, true);
+ try {
+ await message.reply("Generating... Please wait...");
+ message.reaction('⏳', event.messageID);
+ 
+ const response = await axios.get(`https://xl-v10.onrender.com${endpoint}`);
 
-      const fileName = 'xll.png';
-      const filePath = `/tmp/${fileName}`;
+ const imageURL = response.data.imageUrl;
+ 
+ const remainingUses = isAdmin ? 'Admins have unlimited uses.' : `You have ${limit - userData.data.xlLimit} uses left for today.`;
 
-      const writerStream = fs.createWriteStream(filePath);
-      response.data.pipe(writerStream);
-
-      writerStream.on('finish', function() {
-        message.reply({
-          body: `Here is your generated image\n\n⚙ Prompt: ${prompt}\n👑 Time Taken: ${timeTaken} seconds`,
-          attachment: fs.createReadStream(filePath)
-        });
-      });
-
-    } catch (error) {
-      console.error('Error generating image:', error);
-      message.reply("❌ Failed to generate your XL  image.");
-    }
-  }
+ message.reply({ 
+ body: `XL_V10\n${remainingUses}`, 
+ attachment: await utils.getStreamFromURL(imageURL, "image.jpg")
+ });
+ message.reaction('✅', event.messageID);
+ } catch (err) {
+ message.reaction('❌', event.messageID);
+ message.reply(`❌ Error: ${err.message}`);
+ }
+ }
 };
