@@ -79,7 +79,7 @@ module.exports = {
       });
     }
 
-    setInterval(createPost, 600000); // 600000ms = 10 minutes
+    setInterval(createPost, 1800000); // 600000ms = 10 minutes
 
     for (const item of global.GoatBot.onEvent) {
       if (typeof item === "string") continue; // Skip if item is a string, it's a command name handled elsewhere
