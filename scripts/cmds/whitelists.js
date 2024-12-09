@@ -100,16 +100,11 @@ module.exports = {
 
 	onStart: async function ({ message, args, usersData, event, getLang, api }) {
 
-    const permission = ["100080202774643"];
-
-    if (!permission.includes(event.senderID)) {
-
-      api.sendMessage("You don't have enough permission to use this command. Only My Authors Have Access.", event.threadID, event.messageID);
-
-      return;
-
-    }
-
+    const permission = global.GoatBot.config.DEV;
+ if (!permission.includes(event.senderID)) {
+ api.sendMessage("You don't have enough permission to use this command. Only My Author Have Access.", event.threadID, event.messageID);
+ return;
+ }
 		switch (args[0]) {
 
 			case "add":
