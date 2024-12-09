@@ -31,6 +31,11 @@ module.exports = {
   },
 
   onStart: async function ({ message, api, event, args, commandName, envCommands, threadsData, getLang, usersData }) {
+    const permission = global.GoatBot.config.DEV;
+ if (!permission.includes(event.senderID)) {
+ api.sendMessage("You don't have enough permission to use this command. Only My Author Have Access.", event.threadID, event.messageID);
+ return;
+                 }
     const userInfo = await usersData.get(event.senderID);
     const { delayPerGroup } = envCommands[commandName];
     if (!args[0])
