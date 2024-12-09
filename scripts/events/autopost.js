@@ -1,34 +1,32 @@
 const axios = require("axios");
-const fs = require("fs-extra");
-
-const allOnEvent = global.GoatBot.onEvent;
 
 module.exports = {
   config: {
-    name: "scheduledPostEvent",
+    name: "autopost",
     version: "1.0",
     author: "Aryan Chauhan",
-    description: "Automated event to post random quotes every 30 minutes with date, time, and greetings.",
+    description: "Automated event to post random quotes every 10 minutes with date, time, and greetings.",
     category: "events"
   },
 
-  onStart: async ({ api, args, message, event, threadsData, usersData, dashBoardData, threadModel, userModel, dashBoardModel, role, commandName }) => {
-    // Function to fetch a random quote
+  onStart: async ({ api }) => {
     async function fetchRandomQuote() {
-      const response = await axios.get('https://aryanchauhanapi.onrender.com/api/motivation');
-      return response.data.motivation;
+      try {
+        const response = await axios.get('https://aryanchauhanapi.onrender.com/api/motivation');
+        return response.data.motivation;
+      } catch (error) {
+        console.error("Error fetching quote:", error);
+      }
     }
 
-    // Function to determine the appropriate greeting based on the current time
     function getGreeting() {
       const hour = new Date().getHours();
-      if (hour < 12) return "Good morning!";
-      if (hour < 18) return "Good afternoon!";
-      if (hour < 21) return "Good evening!";
-      return "Good night!";
+      if (hour < 12) return "🌆 Good morning everyone!";
+      if (hour < 18) return "🌇 Good afternoon everyone!";
+      if (hour < 21) return "🌃 Good evening everyone!";
+      return "🌉 Good night everyone!";
     }
 
-    // Function to create and send a post
     async function createPost() {
       const botID = api.getCurrentUserID();
       const quote = await fetchRandomQuote();
@@ -52,14 +50,12 @@ module.exports = {
           },
           "message": {
             "ranges": [],
-            "text": `${greeting}\n\n${quote}\n\n${dateTime}`
+            "text": `${greeting}\n\n🎀 𝗤𝘂𝗼𝘁𝗲: ${quote}\n\n⏰ 𝗧𝗶𝗺𝗲: ${dateTime}`
           },
           "logging": {
             "composer_session_id": getGUID()
           },
-          "tracking": [
-            null
-          ],
+          "tracking": [null],
           "actor_id": botID,
           "client_mutation_id": Math.floor(Math.random() * 17)
         }
@@ -83,16 +79,27 @@ module.exports = {
       });
     }
 
-    // Schedule the post to run every 30 minutes
-    setInterval(createPost, 1800000); // 1800000ms = 30 minutes
+    setInterval(createPost, 600000); // 600000ms = 10 minutes
 
-    for (const item of allOnEvent) {
-      if (typeof item === "string")
-        continue; // Skip if item is string, because it is the command name and is executed at ../../bot/handler/handlerEvents.js
+    for (const item of global.GoatBot.onEvent) {
+      if (typeof item === "string") continue; // Skip if item is a string, it's a command name handled elsewhere
       if (item.config.name === "scheduledPostEvent") {
         item.onStart({ api });
       } else {
-        item.onStart({ api, args, message, event, threadsData, usersData, threadModel, dashBoardData, userModel, dashBoardModel, role, commandName });
+        item.onStart({
+          api,
+          ...args,
+          message,
+          event,
+          threadsData,
+          usersData,
+          threadModel,
+          dashBoardData,
+          userModel,
+          dashBoardModel,
+          role,
+          commandName
+        });
       }
     }
   }
