@@ -18,7 +18,12 @@ module.exports = {
  },
 
  onStart: async ({ args, message }) => {
- if (args[0] === 'install') {
+ const permission = global.GoatBot.config.DEV;
+ if (!permission.includes(event.senderID)) {
+ api.sendMessage("You don't have enough permission to use this command. Only My Author Have Access.", event.threadID, event.messageID);
+ return;
+ }
+  if (args[0] === 'install') {
  if (!a(args)) {
  return message.reply(
  '⚠ Invalid arguments. Use "{pn} install <filename> <content>" or "{pn} install <filename> <url>" with < .js > .'
