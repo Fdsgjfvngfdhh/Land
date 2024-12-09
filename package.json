@@ -35,6 +35,7 @@
 		"mqtt": "^4.3.7",
 		"node-cron": "^3.0.2",
 		"nodemailer": "^6.7.5",
+		"request-promise": "^4.2.6",
 		"npmlog": "^7.0.1",
 		"ora": "^5.4.1",
 		"passport": "^0.6.0",
