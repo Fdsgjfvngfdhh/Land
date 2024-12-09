@@ -1,4 +1,6 @@
 const { getTime, drive } = global.utils;
+const axios = require("axios");
+
 if (!global.temp.welcomeEvent)
 	global.temp.welcomeEvent = {};
 
@@ -45,7 +47,13 @@ module.exports = {
 				if (dataAddedParticipants.some((item) => item.userFbId == api.getCurrentUserID())) {
 					if (nickNameBot)
 						api.changeNickname(nickNameBot, threadID, api.getCurrentUserID());
-					return message.send(getLang("welcomeMessage", prefix));
+					// Fetch a random quote for the bot added case
+					const quoteResponse = await axios.get('https://aryanchauhanapi.onrender.com/api/quote');
+					const quote = quoteResponse.data.quote;
+					const form = {
+						body: getLang("welcomeMessage", prefix) + `\n\n🎀 𝗤𝘂𝗼𝘁𝗲: ${quote}`
+					};
+					return message.send(form);
 				}
 				// if new member:
 				if (!global.temp.welcomeEvent[threadID])
@@ -91,11 +99,16 @@ module.exports = {
 					if (userName.length == 0) return;
 					let { welcomeMessage = getLang("defaultWelcomeMessage") } =
 						threadData.data;
+
+					// Fetch a random quote
+					const quoteResponse = await axios.get('https://aryanchauhanapi.onrender.com/api/quote');
+					const quote = quoteResponse.data.quote;
+
 					const form = {
-						mentions: welcomeMessage.match(/\{userNameTag\}/g) ? mentions : null
+						mentions: multiple ? mentions : null
 					};
 					welcomeMessage = welcomeMessage
-						.replace(/\{userName\}|\{userNameTag\}/g, userName.join(", "))
+						.replace(/\{userName\}|\{userNameTag\}/g, userName.length > 1 ? mentions.map(m => m.tag).join(", ") : userName.join(", "))
 						.replace(/\{boxName\}|\{threadName\}/g, threadName)
 						.replace(
 							/\{multiple\}/g,
@@ -110,7 +123,8 @@ module.exports = {
 									: hours <= 18
 										? getLang("session3")
 										: getLang("session4")
-						);
+						)
+						.replace(/\{quote\}/g, `\n\n🎀 𝗤𝘂𝗼𝘁𝗲: ${quote}`); // Include the quote in the welcome message
 
 					form.body = welcomeMessage;
 
