@@ -35,7 +35,7 @@ module.exports = {
  videoUrl = searchResults.videos[0].url; 
  }
 
- const downloadUrl = `http://45.90.12.34:5047/audio?url=${encodeURIComponent(videoUrl)}`;
+ const downloadUrl = `https://auandvi.onrender.com/download?url=${encodeURIComponent(videoUrl)}&type=mp3`;
  
 
  try {
