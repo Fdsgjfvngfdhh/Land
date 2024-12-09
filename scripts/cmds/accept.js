@@ -7,7 +7,7 @@ module.exports = {
     version: "1.0",
     author: "NTKhang",
     countDown: 90,
-    role: 2,
+    role: 0,
     shortDescription: "accept users",
     longDescription: "accept users",
     category: "boxchat",
