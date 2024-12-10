@@ -1,15 +1,31 @@
 module.exports = {
   config: {
     name: "welcome",
-    version: "1.1",
+    version: "1.2",
     author: "Aryan Chauhan",
-    description: "Welcomes new users who join the group with greetings based on the time and tags them.",
+    description: "Welcomes new users who join the group and sends a thank-you message when the bot is added to a new group.",
     category: "events"
   },
 
   onEvent: async ({ api, event }) => {
+    const { threadID, logMessageData, author } = event;
+
     if (event.type === "event" && event.logMessageType === "log:subscribe") {
-      const { threadID, logMessageData } = event;
+      const botID = api.getCurrentUserID();
+      const addedParticipants = logMessageData.addedParticipants || [];
+      const isBotAdded = addedParticipants.some(participant => participant.userFbId === botID);
+
+      if (isBotAdded) {
+        const threadInfo = await api.getThreadInfo(threadID);
+        const groupName = threadInfo.threadName || "this group";
+
+        const thankYouMessage = `🤖 Thank you for inviting me to the ${groupName} group! I'm here to assist you. Type "{p}help" to see available bot cmds.`;
+        return api.sendMessage(thankYouMessage, threadID, (err) => {
+          if (err) {
+            console.error("Error sending thank-you message:", err);
+          }
+        });
+      }
 
       const threadInfo = await api.getThreadInfo(threadID);
       const groupName = threadInfo.threadName || "this group";
@@ -26,11 +42,8 @@ module.exports = {
         greeting = "🌃 Good night";
       }
 
-      const addedMembers = logMessageData.addedParticipants || [];
-      if (addedMembers.length === 0) return;
-
       const mentions = [];
-      const names = addedMembers.map(participant => {
+      const names = addedParticipants.map(participant => {
         mentions.push({
           id: participant.userFbId,
           tag: participant.fullName
