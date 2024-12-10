@@ -38,17 +38,17 @@ module.exports = {
 
 		guide: {
 
-			vi: '   {pn} [add | -a] <uid | @tag>: Thêm quyền whiteListIds cho người dùng'
+			vi: ' {pn} [add | -a] <uid | @tag>: Thêm quyền whiteListIds cho người dùng'
 
-				+ '\n	  {pn} [remove | -r] <uid | @tag>: Xóa quyền whiteListIds của người dùng'
+				+ '\n	 {pn} [remove | -r] <uid | @tag>: Xóa quyền whiteListIds của người dùng'
 
-				+ '\n	  {pn} [list | -l]: Liệt kê danh sách whiteListIds',
+				+ '\n	 {pn} [list | -l]: Liệt kê danh sách whiteListIds',
 
-			en: '   {pn} [add | -a] <uid | @tag>: Add whiteListIds role for user'
+			en: ' {pn} [add | -a] <uid | @tag>: Add whiteListIds role for user'
 
-				+ '\n	  {pn} [remove | -r] <uid | @tag>: Remove whiteListIds role of user'
+				+ '\n	 {pn} [remove | -r] <uid | @tag>: Remove whiteListIds role of user'
 
-				+ '\n	  {pn} [list | -l]: List all whiteListIds'
+				+ '\n	 {pn} [list | -l]: List all whiteListIds'
 
 		}
 
@@ -100,18 +100,13 @@ module.exports = {
 
 	onStart: async function ({ message, args, usersData, event, getLang, api }) {
 
-    const permission = global.GoatBot.config.DEV;
- if (!permission.includes(event.senderID)) {
- api.sendMessage("You don't have enough permission to use this command. Only My Author Have Access.", event.threadID, event.messageID);
- return;
- }
-		switch (args[0]) {
+ switch (args[0]) {
 
 			case "add":
 
 			case "-a":
 
-            case "+": {
+ case "+": {
 
 				if (args[1]) {
 
@@ -173,7 +168,7 @@ module.exports = {
 
 			case "-r":
 
-            case "-": {
+ case "-": {
 
 				if (args[1]) {
 
