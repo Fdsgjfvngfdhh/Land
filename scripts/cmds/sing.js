@@ -1,80 +1,109 @@
 const axios = require('axios');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
-const yts = require('yt-search'); 
+const yts = require("yt-search");
+
+const tmpDir = path.join(__dirname, 'tmp');
+
+
+if (!fs.existsSync(tmpDir)) {
+ fs.mkdirSync(tmpDir);
+}
+
+async function downloadFile(url, filePath) {
+ const writer = fs.createWriteStream(filePath);
+ const response = await axios({
+ url,
+ method: 'GET',
+ responseType: 'stream'
+ });
+ response.data.pipe(writer);
+ return new Promise((resolve, reject) => {
+ writer.on('finish', resolve);
+ writer.on('error', reject);
+ });
+}
 
 module.exports = {
  config: {
  name: "sing",
  version: "1.0",
- author: "Team Calyx",
+ author: "Team Clayx|Rômeo",
  countDown: 5,
  role: 0,
- shortDescription: "Play a song from YouTube",
- longDescription: "Search for a song on YouTube and play the audio",
+ shortDescription: {
+ en: "Download audio from YouTube."
+ },
+ longDescription: {
+ en: "Download audio from YouTube using an external API."
+ },
  category: "𝗠𝗘𝗗𝗜𝗔",
- guide: "{pn} <song name or youtube link>"
+ guide: {
+ en: "{pn} <search query>"
+ }
  },
 
- onStart: async function ({ message, event, args, api }) {
+ onStart: async function ({ message, event, args }) {
  const query = args.join(" ");
+
  if (!query) {
- return message.reply("Please provide a song name or YouTube link.");
- }
- message.reaction('⏳', event.messageID);
- let videoUrl;
- let searchResults;
-
- if (query.includes("youtube.com") || query.includes("youtu.be")) {
- videoUrl = query; 
- } else {
- searchResults = await yts(query); 
- if (searchResults.videos.length === 0) {
- return message.reply("No songs found for your query.");
- }
- videoUrl = searchResults.videos[0].url; 
+ return message.reply("❌ | Please provide a search query!\nUsage: {pn} <search query>");
  }
 
- const downloadUrl = `https://auandvi.onrender.com/download?url=${encodeURIComponent(videoUrl)}&type=mp3`;
- 
+ let loadingMessageId;
 
  try {
- const response = await axios({
- method: 'GET',
- url: downloadUrl,
- responseType: 'stream'
- });
-
- const contentDisposition = response.headers['content-disposition'];
- let title = "song";
-
- if (contentDisposition) {
- const match = contentDisposition.match(/filename="(.+?)\.mp3"/);
- if (match) {
- title = match[1];
- }
- }
-
- const sanitizedTitle = title.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
- const fileName = `${sanitizedTitle}.mp3`;
- const filePath = path.join(__dirname, "cache", fileName);
- response.data.pipe(fs.createWriteStream(filePath));
  
- response.data.on('end', () => {
+ const loadingMessage = await message.reply(`🎧 Finding and Downloading...\nSong: ${query}`);
+ loadingMessageId = loadingMessage.messageID;
+
+ const searchResults = await yts(query);
+
+ if (!searchResults.videos.length) {
+ return message.reply("❌ | No videos found for the given query.");
+ }
+
+ const topVideo = searchResults.videos[0];
+ const videoURL = topVideo.url;
+
+ try {
+ const downloadBaseURL = "https://ytb-team-calyx-pxdf.onrender.com";
+ const downloadURL = `${downloadBaseURL}/download?url=${encodeURIComponent(videoURL)}&type=mp3`;
+
+ const { data: downloadData } = await axios.get(downloadURL);
+
+ if (!downloadData.download_url) {
+ throw new Error("❌ | Error getting download URL from external service.");
+ }
+
+ const fileName = downloadData.download_url.split("/").pop();
+ const filePath = path.join(tmpDir, fileName);
+
+ const fileDownloadURL = `${downloadBaseURL}/${downloadData.download_url}`;
+
+ await downloadFile(fileDownloadURL, filePath);
+
+ 
+ if (loadingMessageId) {
+ await message.unsend(loadingMessageId);
+ }
+
+ 
  message.reply({
- body: sanitizedTitle,
- attachment: fs.createReadStream(filePath)
- }, 
- event.threadID, () => 
- fs.unlinkSync(filePath), 
- event.messageID
- );
+ body: `🎵 ${topVideo.title}`,
+ attachment: fs.createReadStream(filePath),
+ }, () => {
+ if (fs.existsSync(filePath)) {
+ fs.unlinkSync(filePath);
+ }
  });
- await message.reaction('✅', event.messageID);
  } catch (error) {
- console.error("Error downloading or sending audio:", error);
- message.reaction('❌', event.messageID);
+ console.error("Download error:", error.message);
+ return message.reply(`❌ | An error occurred while downloading the audio.\n${error.message}`);
  }
- 
+ } catch (error) {
+ console.error("Search error:", error.message);
+ return message.reply(`❌ | An error occurred while searching.\n${error.message}`);
  }
+ },
 };
