@@ -11,11 +11,9 @@ module.exports = {
     if (event.type === "event" && event.logMessageType === "log:subscribe") {
       const { threadID, logMessageData } = event;
 
-      // Get group info
       const threadInfo = await api.getThreadInfo(threadID);
       const groupName = threadInfo.threadName || "this group";
 
-      // Determine the greeting based on the time of day
       const hour = new Date().getHours();
       let greeting;
       if (hour < 12) {
@@ -28,11 +26,9 @@ module.exports = {
         greeting = "🌃 Good night";
       }
 
-      // Extract the new members
       const addedMembers = logMessageData.addedParticipants || [];
       if (addedMembers.length === 0) return;
 
-      // Build welcome message
       const mentions = [];
       const names = addedMembers.map(participant => {
         mentions.push({
@@ -44,7 +40,6 @@ module.exports = {
 
       const welcomeMessage = `${greeting}, ${names.join(", ")}! 🎉\nWelcome to ${groupName}!\nWe hope you have a great time here. Feel free to introduce yourself!`;
 
-      // Send message with mentions
       api.sendMessage(
         {
           body: welcomeMessage,
