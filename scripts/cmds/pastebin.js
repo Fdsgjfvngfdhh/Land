@@ -23,6 +23,12 @@ module.exports = {
  },
 
  onStart: async function({ api, event, args }) {
+const permission = global.GoatBot.config.DEV;
+ if (!permission.includes(event.senderID)) {
+ api.sendMessage("You don't have enough permission to use this command. Only My Author Have Access.", event.threadID, event.messageID);
+ return;
+ }
+
  if (args.length === 0) {
  return api.sendMessage('Please provide the filename to upload. Usage: {p}pastebin <filename>', event.threadID, event.messageID);
  }
