@@ -4,7 +4,7 @@ module.exports = {
   config: {
     name: "autopost",
     version: "1.0",
-    author: "Aryan Chauhan",
+    author: "ArYAN",
     description: "Automated event to post random quotes every 10 minutes with date, time, and greetings.",
     category: "events"
   },
