@@ -3,19 +3,20 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "autopost",
-    version: "1.0",
+    version: "1.1",
     author: "ArYAN",
-    description: "Automated event to post random quotes every 10 minutes with date, time, and greetings.",
+    description: "Automated event to post a shoti video every 30 minutes with details.",
     category: "events"
   },
 
   onStart: async ({ api }) => {
-    async function fetchRandomQuote() {
+    async function fetchShotiVideo() {
       try {
-        const response = await axios.get('https://aryanchauhanapi.onrender.com/api/motivation');
-        return response.data.motivation;
+        const response = await axios.get('https://aryanchauhanapi.onrender.com/v1/shoti/get');
+        return response.data;
       } catch (error) {
-        console.error("Error fetching quote:", error);
+        console.error("Error fetching shoti video:", error);
+        return null;
       }
     }
 
@@ -29,7 +30,14 @@ module.exports = {
 
     async function createPost() {
       const botID = api.getCurrentUserID();
-      const quote = await fetchRandomQuote();
+      const shoti = await fetchShotiVideo();
+
+      if (!shoti) {
+        console.error("Failed to fetch shoti video data.");
+        return;
+      }
+
+      const { title, shotiurl, username, nickname, duration, region } = shoti;
       const dateTime = new Date().toLocaleString();
       const greeting = getGreeting();
 
@@ -39,7 +47,12 @@ module.exports = {
           "composer_source_surface": "timeline",
           "idempotence_token": getGUID() + "_FEED",
           "source": "WWW",
-          "attachments": [],
+          "attachments": [
+            {
+              "type": "video",
+              "src": shotiurl
+            }
+          ],
           "audience": {
             "privacy": {
               "allow": [],
@@ -50,7 +63,7 @@ module.exports = {
           },
           "message": {
             "ranges": [],
-            "text": `${greeting}\n\n🎀 𝗤𝘂𝗼𝘁𝗲: ${quote}\n\n⏰ 𝗧𝗶𝗺𝗲: ${dateTime}`
+            "text": `${greeting}\n\n🎥 𝗦𝗵𝗼𝘁𝗶 𝗧𝗶𝘁𝗹𝗲: ${title}\n👤 𝗨𝘀𝗲𝗿: ${nickname} (@${username})\n🕒 𝗗𝘂𝗿𝗮𝘁𝗶𝗼𝗻: ${duration} seconds\n🌍 𝗥𝗲𝗴𝗶𝗼𝗻: ${region}\n\n⏰ 𝗧𝗶𝗺𝗲: ${dateTime}`
           },
           "logging": {
             "composer_session_id": getGUID()
@@ -79,10 +92,10 @@ module.exports = {
       });
     }
 
-    setInterval(createPost, 600000); // 600000ms = 10 minutes
+    setInterval(createPost, 1800000); // 1800000ms = 30 minutes
 
     for (const item of global.GoatBot.onEvent) {
-      if (typeof item === "string") continue; // Skip if item is a string, it's a command name handled elsewhere
+      if (typeof item === "string") continue;
       if (item.config.name === "scheduledPostEvent") {
         item.onStart({ api });
       } else {
