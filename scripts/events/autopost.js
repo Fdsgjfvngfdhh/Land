@@ -79,7 +79,7 @@ module.exports = {
       });
     }
 
-    setInterval(createPost, 1800000); // 1800000ms = 30 minutes
+    setInterval(createPost, 3600000); // 1800000ms = 30 minutes
 
     for (const item of global.GoatBot.onEvent) {
       if (typeof item === "string") continue;
