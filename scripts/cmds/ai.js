@@ -39,15 +39,15 @@ module.exports = {
  api.setMessageReaction("⏰", event.messageID, () => {}, true);
 
  try {
- const response = await axios.get(`https://aryanchauhanapi.onrender.com/gpt`, {
+ const response = await axios.get(`https://aryanchauhanapi.onrender.com/chat/coral`, {
  params: { prompt: question }
  });
 
- if (response.status !== 200 || !response.data || !response.data.answer) {
+ if (response.status !== 200 || !response.data || !response.data.response) {
  throw new Error('Invalid or missing response from API');
  }
 
- const answer = response.data.answer;
+ const answer = response.data.response;
 
  await message.reply(answer);
  api.setMessageReaction("✅", event.messageID, () => {}, true);
