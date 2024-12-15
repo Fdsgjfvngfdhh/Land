@@ -17,49 +17,29 @@
     "ignoreCommand": []
   },
   "adminBot": [
-    "100091359169655",
-    "61564142823751",
-    "61561964107281",
-    "100000890146460",
-    "100080202774643"
+    "61570406646668"
   ],
   "GOD": [
-    "100091359169655",
-    "61564142823751",
-    "61561964107281",
-    "100000890146460",
-    "100080202774643"
+    "61570406646668"
   ],
   "vipUser": [
-    "100091359169655",
-    "61564142823751",
-    "61561964107281",
-    "100000890146460",
-    "100080202774643"
+    "61570406646668"
   ],
   "DEV": [
-    "100091359169655",
-    "61564142823751",
-    "61561964107281",
-    "100000890146460",
-    "100080202774643"
+    "61570406646668"
   ],
   "whiteListMode": {
-    "enable": false,
+    "enable": true,
     "whiteListIds": [
-      "100091359169655",
-      "61564142823751",
-      "61561964107281",
-      "100000890146460",
-      "100080202774643"
+      "61570406646668"
     ],
     "notes": "If enabled, only the IDs in whiteListIds can use the bot."
   },
   "nickNameBot": "YOᑌᖇ ᗷOY 🚩💜",
-  "prefix": "$",
+  "prefix": ".",
   "database": {
-    "type": "sqlite",
-    "uriMongodb": "mongodb+srv://aryanchauhan78577:JTNXLYwHTjXRgu07@cluster0.poq4d.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    "type": "mongodb",
+    "uriMongodb": "mongodb+srv://simisimiv2:2TmkspgESAT7rFWD@simisimi.is7na.mongodb.net/?retryWrites=true&w=majority&appName=SimiSimi",
     "autoSyncWhenStart": false,
     "autoRefreshThreadInfoFirstTime": true,
     "notes": "Use 'mongodb' or 'sqlite' as type. For MongoDB, provide the connection URI."
