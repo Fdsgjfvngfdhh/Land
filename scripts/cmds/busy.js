@@ -1,116 +1,79 @@
-const DIG = require("discord-image-generation");
-const fs = require("fs-extra");
+if (!global.client.busyList)
+	global.client.busyList = {};
 
 module.exports = {
 	config: {
-		name: "gay",
-		version: "1.0",
-		author: "@tas33n",
-		countDown: 1,
+		name: "busy",
+		version: "1.6",
+		author: "NTKhang",
+		countDown: 5,
 		role: 0,
-		shortDescription: "find gay",
-		longDescription: "",
+		description: {
+			vi: "bật chế độ không làm phiền, khi bạn được tag bot sẽ thông báo",
+			en: "turn on do not disturb mode, when you are tagged bot will notify"
+		},
 		category: "box chat",
-		guide: "{pn} {{[on | off]}}",
-		envConfig: {
-			deltaNext: 5
+		guide: {
+			vi: "   {pn} [để trống | <lý do>]: bật chế độ không làm phiền"
+				+ "\n   {pn} off: tắt chế độ không làm phiền",
+			en: "   {pn} [empty | <reason>]: turn on do not disturb mode"
+				+ "\n   {pn} off: turn off do not disturb mode"
 		}
 	},
 
 	langs: {
 		vi: {
-			noTag: "Bạn phải tag người bạn muốn tát"
+			turnedOff: "✅ | Đã tắt chế độ không làm phiền",
+			turnedOn: "✅ | Đã bật chế độ không làm phiền",
+			turnedOnWithReason: "✅ | Đã bật chế độ không làm phiền với lý do: %1",
+			turnedOnWithoutReason: "✅ | Đã bật chế độ không làm phiền",
+			alreadyOn: "Hiện tại người dùng %1 đang bận",
+			alreadyOnWithReason: "Hiện tại người dùng %1 đang bận với lý do: %2"
 		},
 		en: {
-			noTag: "You must tag the person you want to "
+			turnedOff: "✅ | Do not disturb mode has been turned off",
+			turnedOn: "✅ | Do not disturb mode has been turned on",
+			turnedOnWithReason: "✅ | Do not disturb mode has been turned on with reason: %1",
+			turnedOnWithoutReason: "✅ | Do not disturb mode has been turned on",
+			alreadyOn: "User %1 is currently busy",
+			alreadyOnWithReason: "User %1 is currently busy with reason: %2"
 		}
 	},
 
-	onStart: async function ({ event, message, usersData, args, getLang }) 
-	{
+	onStart: async function ({ args, message, event, getLang, usersData }) {
+		const { senderID } = event;
 
-		let mention = Object.keys(event.mentions)
-		let uid;
-
-		// const img = await new DIG.Gay().getImage(url);
-
-
-		if(event.type == "message_reply"){
-		uid = event.messageReply.senderID
-		} else{
-			if (mention[0]){
-				uid = mention[0]
-			}else{
-				console.log(" jsjsj")
-				uid = event.senderID}
+		if (args[0] == "off") {
+			const { data } = await usersData.get(senderID);
+			delete data.busy;
+			await usersData.set(senderID, data, "data");
+			return message.reply(getLang("turnedOff"));
 		}
 
-let url = await usersData.getAvatarUrl(uid)
-let avt = await new DIG.Gay().getImage(url)
+		const reason = args.join(" ") || "";
+		await usersData.set(senderID, reason, "data.busy");
+		return message.reply(
+			reason ?
+				getLang("turnedOnWithReason", reason) :
+				getLang("turnedOnWithoutReason")
+		);
+	},
 
+	onChat: async ({ event, message, getLang }) => {
+		const { mentions } = event;
 
-	// 	message.reply({
-	// 		body:"",
-	// 		attachment: await global.utils.getStreamFromURL(avt)
-	// })
-			const pathSave = `${__dirname}/tmp/gay.png`;
-	fs.writeFileSync(pathSave, Buffer.from(avt));
-		let body = "look.... i found a gay"
-		if(!mention[0]) body="Baka you gay\nforgot to reply or mention someone"
-		message.reply({body:body,
-attachment: fs.createReadStream(pathSave)
-		}, () => fs.unlinkSync(pathSave));
+		if (!mentions || Object.keys(mentions).length == 0)
+			return;
+		const arrayMentions = Object.keys(mentions);
 
-
+		for (const userID of arrayMentions) {
+			const reasonBusy = global.db.allUserData.find(item => item.userID == userID)?.data.busy || false;
+			if (reasonBusy !== false) {
+				return message.reply(
+					reasonBusy ?
+						getLang("alreadyOnWithReason", mentions[userID].replace("@", ""), reasonBusy) :
+						getLang("alreadyOn", mentions[userID].replace("@", "")));
+			}
+		}
 	}
 };
-
-
-
-
-
-
-
-
-
-// 	onStart: async function ({ message, event, usersData, threadsData, args }) {
-
-
-
-
-// 		if(event.type == "message_reply"){
-//       avt = await usersData.getAvatarUrl(event.messageReply.senderID)
-//     } else{
-//       if (!uid2){avt =  await usersData.getAvatarUrl(uid1)
-//               } else{avt = await usersData.getAvatarUrl(uid2)}}
-
-
-// 		message.reply({body:"Look.... I found a gay",
-// attachment: fs.createReadStream(pathSave)
-// 		}, () => fs.unlinkSync(pathSave));
-
-
-
-
-
-// message.send({body:"Look.... I found a gay",
-// attachment: fs.createReadStream(pathSave)
-// 		}, () => fs.unlinkSync(pathSave));
-
-// st fs = require("fs-extra");
-// let url = await usersData.getAvatarUrl(event.messageReply.senderID)
-// // const img = await new DIG.Gay().getImage(url);
-		// const pathSave = `${__dirname}/tmp/gay.png`;
-		// fs.writeFileSync(pathSave, Buffer.from(avt));
-
-// // message.send({body:"Look.... I found a gay",
-// // attachment: fs.createReadStream(pathSave)
-// // 		}, () => fs.unlinkSync(pathSave));
-
-
-// 	}
-
-
-
-
-// }
