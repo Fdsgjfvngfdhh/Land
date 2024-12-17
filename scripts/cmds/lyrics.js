@@ -1,47 +1,45 @@
 const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
 
 module.exports = {
-  config: {
-    name: 'lyrics',
-    version: '2.0',
-    author: 'ArYAN',
-    role: 0,
-    category: 'music',
-    longDescription: {
-      en: 'This command allows you to search song lyrics from Google',
-    },
-    guide: {
-      en: '{p}lyrics [ Song Name ]',
-    },
-  },
+ config: {
+ name: "lyrics",
+ version: "1.0",
+ author: "Team Calyx",
+ countDown: 5,
+ role: 0,
+ shortDescription: {
+ en: "Get lyrics for a song",
+ },
+ longDescription: {
+ en: "This command allows you to get the lyrics for a song. Usage: !lyrics <song name>",
+ },
+ category: "𝗠𝗘𝗗𝗜𝗔",
+ guide: {
+ en: "{prefix}lyrics <song name>",
+ },
+ },
 
-  onStart: async function ({ api, event, args }) {
-    try {
-      const songName = args.join(" ");
-      if (!songName) {
-        api.sendMessage("⛔ 𝗜𝗻𝘃𝗮𝗹𝗶𝗱 𝗧𝗶𝘁𝗹𝗲\n\n➤ Please provide a song name!", event.threadID, event.messageID);
-        return;
-      }
+ onStart: async function ({ api, event, args }) {
+ const songName = args.join(" ");
+ if (!songName) {
+ api.sendMessage("Please provide a song name!", event.threadID, event.messageID);
+ return;
+ }
 
-      const apiUrl = `https://aryanchauhanapi.onrender.com/api/lyrics?songName=${encodeURIComponent(songName)}`;
-      const response = await axios.get(apiUrl);
-      const { lyrics, title, artist, image } = response.data;
+ const apiUrl = `http://45.90.12.34:5047/lyrics?name=${encodeURIComponent(songName)}`;
+ try {
+ const response = await axios.get(apiUrl);
+ const { lyrics, title, artist } = response.data;
 
-      if (!lyrics) {
-        api.sendMessage("⛔ 𝗡𝗼𝘁 𝗙𝗼𝘂𝗻𝗱\n\n➤ Sorry, lyrics not found. Please provide another song name!", event.threadID, event.messageID);
-        return;
-      }
-
-      let message = `🎶 𝗟𝗬𝗥𝗜𝗖𝗦\n\nℹ 𝗧𝗶𝘁𝗹𝗲\n➪ ${title}\n👑 𝗔𝗿𝘁𝗶𝘀𝘁\n➪ ${artist}\n🔎 𝗟𝘆𝗿𝗶𝗰𝘀\n━━━━━━━━━━━━━━━\n${lyrics}`;
-      let attachment = await global.utils.getStreamFromURL(image);
-      api.sendMessage({ body: message, attachment }, event.threadID, (err, info) => {
-        let id = info.messageID;
-      });
-    } catch (error) {
-      console.error(error);
-      api.sendMessage("⛔ 𝗦𝗲𝗿𝘃𝗲𝗿 𝗘𝗿𝗿𝗼𝗿\n\n➤ Sorry, there was an error getting the lyrics! " + error.message, event.threadID, event.messageID);
-    }
-  },
+ if (!lyrics) {
+ api.sendMessage(`Sorry, lyrics for "${title}" by ${artist} not found!`, event.threadID, event.messageID);
+ } else {
+ const formattedLyrics = `🎧 | Title: ${title}\n🎤 | Artist: ${artist}\n\n${lyrics}`;
+ api.sendMessage(formattedLyrics, event.threadID, event.messageID);
+ }
+ } catch (error) {
+ console.error(error);
+ api.sendMessage(`Sorry, there was an error getting the lyrics for "${songName}"!`, event.threadID, event.messageID);
+ }
+ },
 };
