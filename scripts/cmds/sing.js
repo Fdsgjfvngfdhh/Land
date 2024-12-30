@@ -1,91 +1,129 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-const yts = require('yt-search'); 
+const axios = require("axios");
+const fs = require("fs");
+const yts = require("yt-search");
+const path = require("path");
+const fsPromises = require("fs").promises;
+
+const cacheDir = path.join(__dirname, "/cache");
 
 module.exports = {
- config: {
- name: "sing",
- version: "1.0",
- author: "Team Calyx",
- countDown: 5,
- role: 0,
- shortDescription: "Play a song from YouTube",
- longDescription: "Search for a song on YouTube and play the audio",
- category: "𝗠𝗘𝗗𝗜𝗔",
- guide: "{pn} <song name or youtube link>"
- },
+  config: {
+    name: "sing",
+    version: "1.2",
+    author: "Aryan Chauhan",
+    countDown: 10,
+    role: 0,
+    description: {
+      en: "Search and download the top audio from YouTube",
+    },
+    category: "media",
+    guide: {
+      en: "{pn} <search term>: search YouTube and download the top audio result",
+    },
+  },
 
- onStart: async function ({ message, event, args, api }) {
- const query = args.join(" ");
- if (!query) {
- return message.reply("Please provide a song name or YouTube link.");
- }
+  onStart: async ({ api, args, event }) => {
+    if (args.length < 1) {
+      return api.sendMessage("❌ Please use the format '{pn}sing <search term>'.", event.threadID, event.messageID);
+    }
 
- message.reaction('⏳', event.messageID);
- let videoUrl;
- let searchResults;
+    const searchTerm = args.join(" ");
+    try {
+      // Ensure the cache directory exists
+      if (!fs.existsSync(cacheDir)) {
+        await fsPromises.mkdir(cacheDir, { recursive: true });
+      }
 
- if (query.includes("youtube.com") || query.includes("youtu.be")) {
- videoUrl = query; 
- } else {
- searchResults = await yts(query); 
- if (searchResults.videos.length === 0) {
- return message.reply("No songs found for your query.");
- }
- videoUrl = searchResults.videos[0].url; 
- }
+      const searchResults = await yts(searchTerm);
+      const topVideo = searchResults.videos[0];
 
- const downloadUrl = `http://45.90.12.34:5047/audio?url=${encodeURIComponent(videoUrl)}`;
+      if (!topVideo) {
+        return api.sendMessage(`⭕ No results found for: ${searchTerm}`, event.threadID, event.messageID);
+      }
 
- try {
- const response = await axios({
- method: 'GET',
- url: downloadUrl,
- responseType: 'stream'
- });
+      api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
- const contentDisposition = response.headers['content-disposition'];
- let title = "song";
+      const videoUrl = topVideo.url;
+      const downloadUrlEndpoint = `https://aryanchauhanapi2.onrender.com/api/mp3?url=${encodeURIComponent(videoUrl)}`;
+      const respo = await axios.get(downloadUrlEndpoint);
+      const downloadUrl = respo.data.result.link;
 
- if (contentDisposition) {
- const match = contentDisposition.match(/filename="(.+?)\.mp3"/);
- if (match) {
- title = match[1];
- }
- }
+      if (!downloadUrl) {
+        return api.sendMessage("❌ Could not retrieve an MP3 file. Please try again with a different search.", event.threadID, event.messageID);
+      }
 
- const fileName = `${title}.mp3`;
- const filePath = path.join(__dirname, "cache", fileName);
+      const totalSize = await getTotalSize(downloadUrl);
+      const audioPath = path.join(cacheDir, `ytb_audio_${topVideo.videoId}.mp3`);
+      await downloadFileParallel(downloadUrl, audioPath, totalSize, 5);
 
- const fileStream = fs.createWriteStream(filePath);
- response.data.pipe(fileStream);
-
- fileStream.on('finish', () => {
- message.reply(
- {
- body: `TITLE: ${title}`,
- attachment: fs.createReadStream(filePath)
- },
- event.threadID,
- event.messageID,
- () => {
- fs.unlink(filePath, (err) => {
- if (err) console.error("Error deleting file:", err);
- });
- }
- );
- });
-
- fileStream.on('error', (err) => {
- console.error("Error writing file:", err);
- message.reaction('❌', event.messageID);
- });
-
- await message.reaction('✅', event.messageID);
- } catch (error) {
- console.error("Error downloading or sending audio:", error);
- message.reaction('❌', event.messageID);
- }
- }
+      api.setMessageReaction("✅", event.messageID, () => {}, true);
+      await api.sendMessage(
+        {
+          body: `📥 Audio download successful:\n• Title: ${topVideo.title}\n• Channel: ${topVideo.author.name}`,
+          attachment: fs.createReadStream(audioPath),
+        },
+        event.threadID,
+        () => fs.unlinkSync(audioPath),
+        event.messageID
+      );
+    } catch (error) {
+      console.error(error);
+      api.setMessageReaction("❌", event.messageID, () => {}, true);
+      return api.sendMessage("❌ Failed to download.", event.threadID, event.messageID);
+    }
+  },
 };
+
+async function getTotalSize(url) {
+  try {
+    const response = await axios.head(url);
+    return parseInt(response.headers["content-length"], 10);
+  } catch (error) {
+    throw new Error("Unable to retrieve file size.");
+  }
+}
+
+async function downloadFileParallel(url, filePath, totalSize, numChunks) {
+  const chunkSize = Math.ceil(totalSize / numChunks);
+  const chunks = [];
+  const progress = Array(numChunks).fill(0);
+
+  async function downloadChunk(url, start, end, index) {
+    try {
+      const response = await axios.get(url, {
+        headers: { Range: `bytes=${start}-${end}` },
+        responseType: "arraybuffer",
+        timeout: 15000,
+      });
+
+      progress[index] = response.data.byteLength;
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to download chunk ${index + 1}: ${error.message}`);
+    }
+  }
+
+  for (let i = 0; i < numChunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize - 1, totalSize - 1);
+    chunks.push(downloadChunk(url, start, end, i));
+  }
+
+  try {
+    const buffers = await Promise.all(chunks);
+
+    const fileStream = fs.createWriteStream(filePath);
+    for (const buffer of buffers) {
+      fileStream.write(Buffer.from(buffer));
+    }
+
+    await new Promise((resolve, reject) => {
+      fileStream.on("finish", resolve);
+      fileStream.on("error", reject);
+      fileStream.end();
+    });
+  } catch (error) {
+    console.error("Error downloading or writing the file:", error);
+    throw error;
+  }
+}
