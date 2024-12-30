@@ -27,7 +27,7 @@ module.exports = {
  }
 
  const countryName = args.join(' ');
- const response = await axios.get(`https://aryanchauhanapi.onrender.com/api/countryinfo?name=${countryName}`);
+ const response = await axios.get(`https://aryanchauhanapi2.onrender.com/api/countryinfo?name=${countryName}`);
  
  if (response.data.result.length === 0) {
  return api.sendMessage('No information found for this country. Please try a different name.', event.threadID, event.messageID);
