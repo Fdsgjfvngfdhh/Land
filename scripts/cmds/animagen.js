@@ -10,52 +10,58 @@ module.exports = {
     role: 0,
     category: "media",
     guide: {
-      en: "{p}animagen <prompt>"
+      en: "{p}animagen <prompt> [--ar=<aspect_ratio>] or [--ar <aspect_ratio>]"
     }
   },
 
   onStart: async function({ message, args, api, event }) {
     try {
-      const prompt = args.join(" ");
+      const input = args.join(" ");
+      const arMatch = input.match(/--ar[=\s]?([\d:]+)/);
+      const prompt = arMatch ? input.replace(arMatch[0], "").trim() : input;
+      const ar = arMatch ? arMatch[1] : "1:1";
+
       if (!prompt) {
         return message.reply("Please provide some prompts.");
       }
 
+      if (ar && !/^\d+:\d+$/.test(ar)) {
+        return message.reply("Invalid aspect ratio format. Use --ar=<width>:<height> or --ar <width>:<height> (e.g., --ar=2:3 or --ar 2:3).");
+      }
+
       api.setMessageReaction("⏰", event.messageID, () => {}, true);
 
-      const startTime = new Date().getTime();
-    
-      const baseURL = `https://aryanchauhanapi.onrender.com/api/animagen`;
-      const params = {
-        prompt: prompt,
-      };
+      const baseURL = `https://aryanchauhanapi2.onrender.com/api/animagen31`;
+      const params = { prompt, ar }; 
 
       const response = await axios.get(baseURL, {
         params: params,
         responseType: 'stream'
       });
 
-      const endTime = new Date().getTime();
-      const timeTaken = (endTime - startTime) / 1000;
-
       api.setMessageReaction("✅", event.messageID, () => {}, true);
 
       const fileName = 'animagen.png';
       const filePath = `/tmp/${fileName}`;
-
       const writerStream = fs.createWriteStream(filePath);
+
       response.data.pipe(writerStream);
 
       writerStream.on('finish', function() {
         message.reply({
-          body: ``,
+          body: "",
           attachment: fs.createReadStream(filePath)
         });
       });
 
+      writerStream.on('error', function(err) {
+        console.error('Error writing file:', err);
+        message.reply("❌ Failed to process the file.");
+      });
+
     } catch (error) {
       console.error('Error generating image:', error);
-      message.reply("❌ Failed to generate your XL  image.");
+      message.reply("❌ Failed to generate the image.");
     }
   }
 };
