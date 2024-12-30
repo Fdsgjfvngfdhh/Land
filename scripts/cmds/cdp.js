@@ -15,7 +15,7 @@ module.exports = {
 
   onStart: async function ({ api, event, args, message }) {
     try {
-        const response = await axios.get(`https://aryanchauhanapi.onrender.com/v1/cdp/get`);
+        const response = await axios.get(`https://aryanchauhanapi2.onrender.com/v1/cdp/get`);
         
         if (response.data && response.data) {
             const { female, male } = response.data;
