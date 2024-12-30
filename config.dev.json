@@ -49,7 +49,7 @@
     "autoRefreshThreadInfoFirstTime": true,
     "notes": "Use 'mongodb' or 'sqlite' as type. For MongoDB, provide the connection URI."
   },
-  "timeZone": "Asia/Kolkata",
+  "timeZone": "Asia/Dhaka",
   "credentials": {
     "gmailAccount": {
       "email": "aryanchauhan78577@gmail.com",
