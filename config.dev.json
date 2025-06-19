@@ -17,39 +17,34 @@
     "ignoreCommand": []
   },
   "adminBot": [
-    "61570406646668",
-    "61564142823751"
+    "61550548915599"
   ],
   "GOD": [
-    "61570406646668",
-    "61564142823751"
+    "61550548915599"
   ],
   "vipUser": [
-    "61570406646668",
-    "61564142823751"
+    "61550548915599"
   ],
   "DEV": [
-    "61570406646668",
-    "61564142823751"
+    "61550548915599"
   ],
   "whiteListMode": {
     "enable": false,
     "whiteListIds": [
-     "61570406646668",
-     "61564142823751"
+     "61550548915599"
     ],
     "notes": "If enabled, only the IDs in whiteListIds can use the bot."
   },
-  "nickNameBot": "YOᑌᖇ ᗷOY 🚩💜",
-  "prefix": ".",
+  "nickNameBot": "𝗦𝗵𝗶𝗭𝘂𝗸𝗮 🎀",
+  "prefix": "-",
   "database": {
-    "type": "sqlite",
+    "type": "mongodb",
     "uriMongodb": "mongodb+srv://simisimiv2:2TmkspgESAT7rFWD@simisimi.is7na.mongodb.net/?retryWrites=true&w=majority&appName=SimiSimi",
     "autoSyncWhenStart": false,
     "autoRefreshThreadInfoFirstTime": true,
     "notes": "Use 'mongodb' or 'sqlite' as type. For MongoDB, provide the connection URI."
   },
-  "timeZone": "Asia/Dhaka",
+  "timeZone": "Asia/Kolkata",
   "credentials": {
     "gmailAccount": {
       "email": "aryanchauhan78577@gmail.com",
@@ -148,15 +143,17 @@
     "updatePresence": true,
     "listenTyping": true,
     "logLevel": "error",
-    "selfListen": true,
+    "selfListen": false,
     "selfListenEvent": true,
     "autoMarkDelivery": false,
     "autoReconnect": true,
     "notes": "See documentation for usage."
   },
   "whiteListModeThread": {
-    "enable": false,
-    "whiteListThreadIds": [],
+    "enable": true,
+    "whiteListThreadIds": [
+      "24594361020154416"
+    ],
     "notes": "If enabled, only threads in whiteListThreadIds can use the bot."
   }
 }
